@@ -1,0 +1,34 @@
+.PHONY: all install clean link
+.SUBDIRS: lib
+
+USE_OCAMLFIND = true
+
+OCAMLPACKS = batteries lwt lwt.unix
+OCAMLINCLUDES += lib
+
+OCAMLFLAGS +=
+OCAMLCFLAGS +=
+OCAMLOPTFLAGS +=
+OCAML_LINK_FLAGS +=
+OCAML_BYTE_LINK_FLAGS +=
+OCAML_NATIVE_LINK_FLAGS +=
+
+FILES = main
+PROGRAM = bin/yu
+OCAML_LIBS += lib/libyu
+OCAML_CLIBS +=
+OCAML_OTHER_LIBS +=
+OCAML_LIB_FLAGS +=
+
+.DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES)) bin/cat
+
+bin/cat:
+  ln -s yu bin/cat
+
+clean:
+  rm *.cmi
+  rm *.cmx
+  rm *.o
+  rm $(PROGRAM)
+  rm $(PROGRAM).opt
+  rm bin/cat

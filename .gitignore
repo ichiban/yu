@@ -1,0 +1,10 @@
+*.a
+*.cmi
+*.cmx
+*.cmxa
+*.o
+*.omc
+*~
+bin/*
+.omakedb
+.omakedb.lock

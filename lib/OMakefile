@@ -1,0 +1,17 @@
+.PHONY: clean
+
+USE_OCAMLFIND = true
+
+OCAMLPACKS = batteries lwt lwt.unix
+
+FILES = cat
+LIB = libyu
+
+.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
+
+clean:
+  rm *.cmi
+  rm *.cmx
+  rm *.o
+  rm *.a
+  rm *.cmxa
