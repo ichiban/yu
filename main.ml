@@ -70,7 +70,7 @@ let cat_parser =
       and precede characters that have the high bit set with ‘M-’.";
   parser
 
-let cat_command () =
+let cat_command =
   let args = OptParser.parse_argv cat_parser in
   Cat.perform args
     ~number_nonblank:(any_of [
@@ -97,8 +97,8 @@ let cat_command () =
       show_nonprinting_and_tabs;
     ])
 
-let default_command () =
-  ()
+let default_command =
+  Lwt.return ()
 
 let command_name =
   let _, program = String.rsplit Sys.executable_name ~by:"/" in
@@ -115,7 +115,7 @@ let command =
 
 let () =
   try
-    command ();
+    Lwt_main.run command;
     exit 0
   with
     | _ -> exit 1
