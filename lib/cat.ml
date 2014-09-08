@@ -1,6 +1,10 @@
 open Batteries
 open Lwt
 
+let horizontal_tab_code = Char.code '\t'
+let space_code = Char.code ' '
+let delete_code = 0o177
+
 let filenames = function
   | [] -> ["-"]
   | x -> x
@@ -46,18 +50,18 @@ let sqeeze_blank_lines lines =
 
 let is_control_char ?(include_tabs = true) char =
   match Char.code char with
-    | 9 -> include_tabs (* HF *)
-    | n when n < 32 -> true (* NUL to US *)
-    | 127 -> true (* DEL *)
+    | n when n = horizontal_tab_code -> include_tabs
+    | n when n < space_code -> true (* NUL to US *)
+    | n when n = delete_code -> true
     | _ -> false
 
 let is_meta_char char =
-  Char.code char > 127
+  Char.code char > delete_code
 
 let caret_notation char =
-  let offset = Char.code 'A' - 1 in
+  let offset = 0o100 in
   let printable_char =
-    if 0o177 = Char.code char then '?'
+    if delete_code = Char.code char then '?'
     else
       Char.code char + offset |> Char.chr
   in
@@ -98,6 +102,9 @@ let replace_nonprinting lines =
     ) line
   ) lines
 
+let if_so condition f =
+  if condition then f else identity
+
 let perform
     ?(number_nonblank = false)
     ?(show_ends = false)
@@ -106,31 +113,18 @@ let perform
     ?(show_tabs = false)
     ?(show_nonprinting = false)
     args =
+  let filter_lines lines = lines
+    |> if_so (number || number_nonblank) (number_lines ~blank:number_nonblank)
+    |> if_so show_ends append_ends
+    |> if_so squeeze_blank sqeeze_blank_lines
+    |> if_so show_tabs replace_tabs
+    |> if_so show_nonprinting replace_nonprinting
+  in
   let file_names = filenames args in
   Lwt_list.map_p input file_names >>= fun inputs ->
   Lwt_list.iter_s (fun input ->
-    let lines = Lwt_io.read_lines input
-		      |> begin
-			if number_nonblank || number then
-			  number_lines ~blank:number_nonblank
-			else identity
-		      end
-		      |> begin
-			if show_ends then append_ends
-			else identity
-		      end
-		      |> begin
-			if squeeze_blank then sqeeze_blank_lines
-			else identity
-		      end
-		      |> begin
-			if show_tabs then replace_tabs
-			else identity
-		      end
-		      |> begin
-			if show_nonprinting then replace_nonprinting
-			else identity
-		      end
+    let lines =
+      Lwt_io.read_lines input |> filter_lines
     in
     Lwt_io.write_lines Lwt_io.stdout lines
   ) inputs
